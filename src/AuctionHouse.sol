@@ -2,11 +2,18 @@
 pragma solidity ^0.8.20;
 
 interface IERC20 {
+    /// @notice transferFrom - core operation
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
+/// @title AuctionHouse
+/// @notice Core contract for AuctionHouse on Arc Network
+/// @dev Built with Foundry, deployed on Arc testnet (Chain ID: 5042002)
 contract AuctionHouse {
+    /// @notice Contract version
+    string public constant VERSION = "1.1.0";
+
     IERC20 public immutable usdc;
     address public owner;
 
@@ -32,12 +39,14 @@ contract AuctionHouse {
         owner = msg.sender;
     }
 
+    /// @notice createAuction - core operation
     function createAuction(string calldata item, uint256 minBid, uint256 duration) external returns (uint256) {
         auctions.push(Auction(msg.sender, item, minBid, block.timestamp + duration, address(0), 0, false));
         emit AuctionCreated(auctions.length - 1, item, minBid, block.timestamp + duration);
         return auctions.length - 1;
     }
 
+    /// @notice bid - core operation
     function bid(uint256 id, uint256 amount) external {
         Auction storage a = auctions[id];
         require(block.timestamp < a.deadline && !a.settled, "CLOSED");
@@ -53,6 +62,7 @@ contract AuctionHouse {
         emit BidPlaced(id, msg.sender, amount);
     }
 
+    /// @notice settle - core operation
     function settle(uint256 id) external {
         Auction storage a = auctions[id];
         require(block.timestamp >= a.deadline && !a.settled, "CANNOT");
